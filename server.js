@@ -45,19 +45,25 @@ app.use(express.urlencoded({extended: true}))
 // Om Views weer te geven, heb je Routes nodig
 // Maak een GET route voor de index
 app.get('/', async function (request, response) {
-  // Haal alle personen uit de WHOIS API op, van dit jaar
+  // Haal alle personen op uit de WHOIS API
   const personResponse = await fetch('https://fdnd.directus.app/items/person/?sort=name&fields=*,squads.squad_id.name,squads.squad_id.cohort&filter={"_and":[{"squads":{"squad_id":{"tribe":{"name":"FDND Jaar 1"}}}},{"squads":{"squad_id":{"cohort":"2425"}}}]}')
 
-  // En haal daarvan de JSON op
+  // Haal JSON op van de personen
   const personResponseJSON = await personResponse.json()
-  
-  // personResponseJSON bevat gegevens van alle personen uit alle squads van dit jaar
-  // Je zou dat hier kunnen filteren, sorteren, of zelfs aanpassen, voordat je het doorgeeft aan de view
 
-  // Render index.liquid uit de views map en geef de opgehaalde data mee als variabele, genaamd persons
-  // Geef ook de eerder opgehaalde squad data mee aan de view
-  response.render('index.liquid', {persons: personResponseJSON.data, squads: squadResponseJSON.data})
+  // Filter alleen de mensen die in Squad 1G zitten
+  const filteredPersons = personResponseJSON.data.filter(person =>
+    person.squads.some(squad => squad.squad_id.name === "1G")
+  )
+
+  // Haal alle squads op uit de API
+  const squadResponse = await fetch('https://fdnd.directus.app/items/squad')
+  const squadResponseJSON = await squadResponse.json()
+
+  // Render index.liquid uit de views-map en geef de gefilterde data mee
+  response.render('index.liquid', { persons: filteredPersons, squads: squadResponseJSON.data })
 })
+
 
 // Maak een POST route voor de index; hiermee kun je bijvoorbeeld formulieren afvangen
 app.post('/', async function (request, response) {
@@ -79,7 +85,6 @@ app.get('/student/:id', async function (request, response) {
   // Geef ook de eerder opgehaalde squad data mee aan de view
   response.render('student.liquid', {person: personDetailResponseJSON.data, squads: squadResponseJSON.data})
 })
-
 
 // Stel het poortnummer in waar express op moet gaan luisteren
 app.set('port', process.env.PORT || 8000)
