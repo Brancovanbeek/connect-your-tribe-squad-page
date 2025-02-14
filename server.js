@@ -97,6 +97,16 @@ app.get('/az', async function (request, response) {
   response.render('az.liquid', { persons: personResponseJSON.data, squads: squadResponseJSON.data })
 })
 
+app.get('/age', async function (request, response) {
+  // Haal alle personen op uit de WHOIS API
+  const personResponse = await fetch('https://fdnd.directus.app/items/person/?sort=birthdate')
+
+  // Haal JSON op van de personen
+  const personResponseJSON = await personResponse.json()
+
+  // Render index.liquid uit de views-map en geef de gefilterde data mee
+  response.render('age.liquid', { persons: personResponseJSON.data, squads: squadResponseJSON.data })
+})
 
 
 
